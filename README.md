@@ -1,3 +1,3 @@
-# ESP32 Template
+# esp32-xmas
 
-An Eclipse project template.
+Drive APA102 LED strips with the ESP32.
