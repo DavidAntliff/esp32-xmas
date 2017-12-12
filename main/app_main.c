@@ -6,12 +6,24 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 
+#include "constants.h"
+#include "mqtt.h"
+#include "wifi_support.h"
+
 #define TAG "APP"
 
-#define BLUE_LED_GPIO (GPIO_NUM_2)
 #define PIN_LED_CLOCK (GPIO_NUM_25)
 #define PIN_LED_DATA (GPIO_NUM_26)
 #define PIN_LED_CS (GPIO_NUM_13)
+
+extern mqtt_client * g_client;
+
+bool g_mqtt_disconnected = false;
+
+uint8_t g_brightness = 1;
+uint8_t g_red = 1;
+uint8_t g_green = 1;
+uint8_t g_blue = 1;
 
 void led_task(void * pvParameter)
 {
@@ -39,7 +51,7 @@ void led_start(spi_device_handle_t handle)
         .rx_buffer = data,
     };
 
-    ESP_LOGD(TAG, "... Transmitting.");
+    ESP_LOGD(TAG, "... Transmitting START.");
     ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
 }
 
@@ -48,20 +60,23 @@ void led_end(spi_device_handle_t handle, int num_leds)
     int num_end_bits = (num_leds + 1) / 2;
     int num_end_bytes = (num_end_bits + 7) / 8;
 
-    // for now, just send four zero bytes
-    uint8_t data[4] = { 0, 0, 0, 0 };
+    uint8_t * data = malloc(num_end_bytes * sizeof(*data));
+    memset(data, 0, num_end_bytes * sizeof(*data));
+
     spi_transaction_t trans_desc = {
         .address = 0,
         .command = 0,
         .flags = 0,
-        .length = 4 * 8,  // bits
+        .length = num_end_bytes * 8,  // bits
         .rxlength = 0,
         .tx_buffer = data,
         .rx_buffer = data,
     };
 
-    ESP_LOGD(TAG, "... Transmitting.");
+    ESP_LOGD(TAG, "... Transmitting END.");
     ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
+
+    free(data);
 }
 
 void led_set(spi_device_handle_t handle, uint8_t brightness, uint8_t red, uint8_t green, uint8_t blue)
@@ -77,7 +92,7 @@ void led_set(spi_device_handle_t handle, uint8_t brightness, uint8_t red, uint8_
         .rx_buffer = data,
     };
 
-    ESP_LOGD(TAG, "... Transmitting.");
+    ESP_LOGD(TAG, "... Transmitting SET.");
     ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
 }
 
@@ -110,33 +125,26 @@ void test_spi_task(void * pvParameter)
     };
     ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &dev_config, &handle));
 
-//    led_set(handle, 0x0f, 0xff, 0x00, 0x00);
-//    led_set(handle, 0x0f, 0xff, 0x3f, 0x00);
-//    led_set(handle, 0x0f, 0xff, 0xff, 0x00);
-//    led_set(handle, 0x0f, 0x00, 0xff, 0x00);
-//    led_set(handle, 0x0f, 0x00, 0x00, 0xff);
-//    led_set(handle, 0x0f, 0xff, 0x00, 0xff);
-
-    int num_leds = 60;
-    uint8_t brightness = 0x01;
-    uint8_t red = 0xff;
-    uint8_t green = 0x00;
-    uint8_t blue = 0x00;
-
     while (1)
     {
         led_start(handle);
-        for (int i = 0; i < num_leds; ++i)
+        for (int i = 0; i < NUM_LEDS; ++i)
         {
-            led_set(handle, brightness, red, green, blue);
+            led_set(handle, g_brightness, g_red, g_green, g_blue);
         }
-        led_end(handle, num_leds);
+        led_end(handle, NUM_LEDS);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        uint8_t tmp = blue;
-        blue = green;
-        green = red;
-        red = tmp;
+        // TODO: try a semaphore here
+        vTaskDelay(10);
+
+        if (g_mqtt_disconnected)
+        {
+            // reinitialise MQTT communications
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "... Restarting MQTT.");
+            start_mqtt();
+            g_mqtt_disconnected = false;
+        }
     }
 
 
@@ -151,7 +159,12 @@ void test_spi_task(void * pvParameter)
 
 void app_main()
 {
-    xTaskCreate(&led_task, "led_task", 2048, NULL, 5, NULL);
+    gpio_pad_select_gpio(BLUE_LED_GPIO);
+    gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
+
+    wifi_support_init();
+
+    //xTaskCreate(&led_task, "led_task", 2048, NULL, 5, NULL);
     xTaskCreate(&test_spi_task, "test_spi_task", 2048, NULL, 5, NULL);
 }
 

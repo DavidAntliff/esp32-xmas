@@ -1,0 +1,27 @@
+menu "esp32-xmas Configuration"
+
+config MQTT_BROKER_IP_ADDRESS
+    string "MQTT Broker IP Address"
+	help
+        IP address or name of MQTT broker.
+
+config MQTT_BROKER_TCP_PORT
+    int "MQTT Broker TCP Port"
+    range 0 65535
+    default 1883
+    help
+        TCP Port to use to connect to MQTT broker.
+
+config WIFI_SSID
+    string "WiFi SSID"
+    default "myssid"
+    help
+        SSID (network name) for the example to connect to.
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+    default "mypassword"
+    help
+        WiFi password (WPA or WPA2) for the example to use.
+
+endmenu
