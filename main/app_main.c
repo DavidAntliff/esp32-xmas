@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "mqtt.h"
 #include "wifi_support.h"
+#include "patterns.h"
 
 #define TAG "APP"
 
@@ -16,10 +17,9 @@
 #define PIN_LED_DATA (GPIO_NUM_26)
 #define PIN_LED_CS (GPIO_NUM_13)
 
-extern mqtt_client * g_client;
-
 bool g_mqtt_disconnected = false;
 
+uint8_t g_pattern = 0;
 uint8_t g_brightness = 0;
 uint8_t g_red = 0;
 uint8_t g_green = 0;
@@ -73,9 +73,13 @@ void test_spi_task(void * pvParameter)
     ESP_LOGI(TAG, "NUM_ZEROS %d", NUM_ZEROS);
     ESP_LOGI(TAG, "NUM_BYTES %d", NUM_BYTES);
 
+    led_state leds[NUM_LEDS] = { 0 };
+
     while (1)
     {
         uint8_t buffer[NUM_BYTES] = { 0 };
+
+        do_pattern(leds, NUM_LEDS, g_pattern, g_brightness, g_red, g_green, g_blue);
 
         for (int i = 0; i < NUM_LEDS; ++i)
         {

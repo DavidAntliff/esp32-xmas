@@ -38,6 +38,7 @@
 mqtt_client * g_client = NULL;
 extern bool g_mqtt_disconnected;
 
+extern uint8_t g_pattern;
 extern uint8_t g_brightness;
 extern uint8_t g_red;
 extern uint8_t g_green;
@@ -55,11 +56,27 @@ void connected_cb(mqtt_client * client, mqtt_event_data_t * event_data)
     const char * value = "MQTT connected";
     mqtt_publish(client, "xmas/status", value, strlen(value), 0, 0);
 
+    // need to delay a few seconds to avoid Subscribe requests being mixed into the Publish messages
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
     // subscribe
+    mqtt_subscribe(client, "xmas/pattern", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     mqtt_subscribe(client, "xmas/brightness", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     mqtt_subscribe(client, "xmas/red", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     mqtt_subscribe(client, "xmas/blue", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     mqtt_subscribe(client, "xmas/green", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    mqtt_subscribe(client, "xmas/pattern/#", 0);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    // This MQTT library seems very unstable - attempts to subscribe to multiple topics without delays
+    // often results in combined TCP messages that are not handled correctly. I'm not sure where the
+    // problem lies yet, but for now keep a delay between each Subscribe request to force them into
+    // distinct TCP packets.
 }
 
 void disconnected_cb(mqtt_client * client, mqtt_event_data_t * event_data)
@@ -104,29 +121,36 @@ void data_cb(mqtt_client * client, mqtt_event_data_t * event_data)
                  event_data->data_total_length);
         esp_log_buffer_hex(TAG":mqtt", data, event_data->data_length + 1);
 
-        if (strcmp(topic, "xmas/brightness") == 0)
+        if (strncmp(topic, "xmas/pattern/", strlen("xmas/pattern/")) == 0)
         {
-            float fval = atof(data);
-            g_brightness = fval * MAX_BRIGHTNESS;
-            ESP_LOGI(TAG, "brightness %f: %d", fval, g_brightness);
+            int index = 0;
+            sscanf(topic, "xmas/pattern/%d/1", &index);
+            int val = atoi(data);
+            if (val == 1)
+            {
+                g_pattern = index - 1;
+                ESP_LOGI(TAG, "pattern %d", g_pattern);
+            }
+        }
+        else if (strcmp(topic, "xmas/brightness") == 0)
+        {
+            g_brightness = atoi(data);
+            ESP_LOGI(TAG, "brightness %d", g_brightness);
         }
         else if (strcmp(topic, "xmas/red") == 0)
         {
-            float fval = atof(data);
-            g_red = fval * MAX_RED;
-            ESP_LOGI(TAG, "red %f: %d", fval, g_red);
+            g_red = atoi(data);
+            ESP_LOGI(TAG, "red %d", g_red);
         }
         else if (strcmp(topic, "xmas/green") == 0)
         {
-            float fval = atof(data);
-            g_green = fval * MAX_GREEN;
-            ESP_LOGI(TAG, "green %f: %d", fval, g_green);
+            g_green = atoi(data);
+            ESP_LOGI(TAG, "green %d", g_green);
         }
         else if (strcmp(topic, "xmas/blue") == 0)
         {
-            float fval = atof(data);
-            g_blue = fval * MAX_BLUE;
-            ESP_LOGI(TAG, "blue %f: %d", fval, g_blue);
+            g_blue = atoi(data);
+            ESP_LOGI(TAG, "blue %d", g_blue);
         }
         else
         {
@@ -153,7 +177,7 @@ mqtt_settings g_settings = {
     .client_id = "xmas_mqtt_client",
     .username = "user",
     .password = "pass",
-    .clean_session = 0,
+    .clean_session = 1,//0,
     .keepalive = 120,
     .lwt_topic = "/lwt",
     .lwt_msg = "offline",
