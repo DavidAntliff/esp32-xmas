@@ -20,79 +20,23 @@ extern mqtt_client * g_client;
 
 bool g_mqtt_disconnected = false;
 
-uint8_t g_brightness = 8;
-uint8_t g_red = 128;
+uint8_t g_brightness = 0;
+uint8_t g_red = 0;
 uint8_t g_green = 0;
 uint8_t g_blue = 0;
 
-void led_task(void * pvParameter)
+void write_buffer(spi_device_handle_t handle, uint8_t * data, uint32_t len)
 {
-	gpio_pad_select_gpio(BLUE_LED_GPIO);
-	gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
-	while(1)
-	{
-		gpio_set_level(BLUE_LED_GPIO, 0);
-		vTaskDelay(1000 / portTICK_RATE_MS);
-		gpio_set_level(BLUE_LED_GPIO, 1);
-		vTaskDelay(1000 / portTICK_RATE_MS);
-	}
-}
-
-void led_start(spi_device_handle_t handle)
-{
-    uint8_t data[4] = { 0, 0, 0, 0 };
     spi_transaction_t trans_desc = {
         .address = 0,
         .command = 0,
         .flags = 0,
-        .length = 4 * 8,  // bits
+        .length = len * 8,  // bits
         .rxlength = 0,
         .tx_buffer = data,
         .rx_buffer = data,
     };
 
-    ESP_LOGD(TAG, "... Transmitting START.");
-    ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
-}
-
-void led_end(spi_device_handle_t handle, int num_leds)
-{
-    int num_end_bits = (num_leds + 1) / 2;
-    int num_end_bytes = (num_end_bits + 7) / 8;
-
-    uint8_t * data = malloc(num_end_bytes * sizeof(*data));
-    memset(data, 0, num_end_bytes * sizeof(*data));
-
-    spi_transaction_t trans_desc = {
-        .address = 0,
-        .command = 0,
-        .flags = 0,
-        .length = num_end_bytes * 8,  // bits
-        .rxlength = 0,
-        .tx_buffer = data,
-        .rx_buffer = data,
-    };
-
-    ESP_LOGD(TAG, "... Transmitting END.");
-    ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
-
-    free(data);
-}
-
-void led_set(spi_device_handle_t handle, uint8_t brightness, uint8_t red, uint8_t green, uint8_t blue)
-{
-    uint8_t data[4] = { 0xe0 + brightness, blue, green, red };
-    spi_transaction_t trans_desc = {
-        .address = 0,
-        .command = 0,
-        .flags = 0,
-        .length = 4 * 8,  // bits
-        .rxlength = 0,
-        .tx_buffer = data,
-        .rx_buffer = data,
-    };
-
-    ESP_LOGD(TAG, "... Transmitting SET.");
     ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
 }
 
@@ -105,7 +49,7 @@ void test_spi_task(void * pvParameter)
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
     };
-    ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &bus_config, 1 /*DMA channel*/));
+    ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &bus_config, SPI_DMA_CHANNEL));
 
     spi_device_handle_t handle;
     spi_device_interface_config_t dev_config = {
@@ -116,24 +60,31 @@ void test_spi_task(void * pvParameter)
         .duty_cycle_pos = 0,
         .cs_ena_posttrans = 0,
         .cs_ena_pretrans = 0,
-        .clock_speed_hz = 10000000,
+        .clock_speed_hz = SPI_CLK_RATE,
         .spics_io_num = PIN_LED_CS, //-1,
         .flags = 0,
-//        .queue_size = NUM_LEDS + 4,
         .queue_size = 1,
         .pre_cb = NULL,
         .post_cb = NULL,
     };
     ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &dev_config, &handle));
 
+    ESP_LOGI(TAG, "NUM_LEDS %d", NUM_LEDS);
+    ESP_LOGI(TAG, "NUM_ZEROS %d", NUM_ZEROS);
+    ESP_LOGI(TAG, "NUM_BYTES %d", NUM_BYTES);
+
     while (1)
     {
-        led_start(handle);
+        uint8_t buffer[NUM_BYTES] = { 0 };
+
         for (int i = 0; i < NUM_LEDS; ++i)
         {
-            led_set(handle, g_brightness, g_red, g_green, g_blue);
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 0] = LED_FRAME_BASE + g_brightness;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 1] = g_blue;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 2] = g_green;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 3] = g_red;
         }
-        led_end(handle, NUM_LEDS);
+        write_buffer(handle, buffer, NUM_BYTES);
 
         // TODO: try a semaphore here
         vTaskDelay(1);
@@ -165,7 +116,6 @@ void app_main()
 
     wifi_support_init();
 
-    //xTaskCreate(&led_task, "led_task", 2048, NULL, 5, NULL);
-    xTaskCreate(&test_spi_task, "test_spi_task", 2048, NULL, 5, NULL);
+    xTaskCreate(&test_spi_task, "test_spi_task", 4096, NULL, 5, NULL);
 }
 
