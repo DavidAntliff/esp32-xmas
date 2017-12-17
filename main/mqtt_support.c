@@ -99,10 +99,10 @@ void data_cb(mqtt_client * client, mqtt_event_data_t * event_data)
 
         // data is null-terminated so can be treated like a string if required
 
-        ESP_LOGD(TAG":mqtt", "[APP] Publish data[%d/%d bytes]",
+        ESP_LOGI(TAG":mqtt", "[APP] Publish data[%d/%d bytes]",
                  event_data->data_length + event_data->data_offset,
                  event_data->data_total_length);
-        //esp_log_buffer_hex(TAG":mqtt", data, event_data->data_length + 1);
+        esp_log_buffer_hex(TAG":mqtt", data, event_data->data_length + 1);
 
         if (strcmp(topic, "xmas/brightness") == 0)
         {

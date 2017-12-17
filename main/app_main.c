@@ -20,10 +20,10 @@ extern mqtt_client * g_client;
 
 bool g_mqtt_disconnected = false;
 
-uint8_t g_brightness = 1;
-uint8_t g_red = 1;
-uint8_t g_green = 1;
-uint8_t g_blue = 1;
+uint8_t g_brightness = 8;
+uint8_t g_red = 128;
+uint8_t g_green = 0;
+uint8_t g_blue = 0;
 
 void led_task(void * pvParameter)
 {
@@ -119,6 +119,7 @@ void test_spi_task(void * pvParameter)
         .clock_speed_hz = 10000000,
         .spics_io_num = PIN_LED_CS, //-1,
         .flags = 0,
+//        .queue_size = NUM_LEDS + 4,
         .queue_size = 1,
         .pre_cb = NULL,
         .post_cb = NULL,
@@ -135,7 +136,7 @@ void test_spi_task(void * pvParameter)
         led_end(handle, NUM_LEDS);
 
         // TODO: try a semaphore here
-        vTaskDelay(10);
+        vTaskDelay(1);
 
         if (g_mqtt_disconnected)
         {
