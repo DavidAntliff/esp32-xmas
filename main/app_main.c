@@ -7,7 +7,7 @@
 #include "driver/spi_master.h"
 
 #include "constants.h"
-#include "mqtt.h"
+#include "mqtt_support.h"
 #include "wifi_support.h"
 #include "patterns.h"
 
@@ -90,17 +90,7 @@ void test_spi_task(void * pvParameter)
         }
         write_buffer(handle, buffer, NUM_BYTES);
 
-        // TODO: try a semaphore here
         vTaskDelay(1);
-
-        if (g_mqtt_disconnected)
-        {
-            // reinitialise MQTT communications
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
-            ESP_LOGI(TAG, "... Restarting MQTT.");
-            start_mqtt();
-            g_mqtt_disconnected = false;
-        }
     }
 
 
@@ -118,6 +108,7 @@ void app_main()
     gpio_pad_select_gpio(BLUE_LED_GPIO);
     gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
 
+    mqtt_support_init();
     wifi_support_init();
 
     xTaskCreate(&test_spi_task, "test_spi_task", 8192, NULL, 4, NULL);

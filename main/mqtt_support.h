@@ -25,11 +25,6 @@
 #ifndef MQTT_SUPPORT_H
 #define MQTT_SUPPORT_H
 
-#include "mqtt.h"
-
-extern mqtt_client * g_client;
-extern mqtt_settings g_settings;
-
 void mqtt_support_init(void);
 
 #endif // MQTT_SUPPORT_H

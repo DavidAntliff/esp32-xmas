@@ -27,6 +27,4 @@
 
 void wifi_support_init(void);
 
-void start_mqtt(void);
-
 #endif // WIFI_SUPPORT_H

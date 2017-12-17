@@ -31,18 +31,13 @@
 #include "esp_event_loop.h"
 
 #include "wifi_support.h"
-#include "mqtt.h"
+#include "esp_mqtt.h"
 #include "mqtt_support.h"
 
 #define TAG "wifi_support"
 
 static EventGroupHandle_t wifi_event_group;
 const static int CONNECTED_BIT = BIT0;
-
-void start_mqtt(void)
-{
-    g_client = mqtt_start(&g_settings);
-}
 
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
@@ -51,18 +46,15 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
             esp_wifi_connect();
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
+            ESP_LOGI(TAG, "WiFi got IP");
             xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-
-            // init app here
-            ESP_LOGI(TAG, "WiFi Got IP");
-            start_mqtt();
+            esp_mqtt_start(CONFIG_MQTT_BROKER_IP_ADDRESS, CONFIG_MQTT_BROKER_TCP_PORT, "esp-mqtt", "username", "password");
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             /* This is a workaround as ESP32 WiFi libs don't currently
                auto-reassociate. */
-            g_client = NULL;
+            esp_mqtt_stop();
             esp_wifi_connect();
-            mqtt_stop();
             xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
             break;
         default:
