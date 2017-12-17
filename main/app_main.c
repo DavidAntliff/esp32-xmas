@@ -83,10 +83,10 @@ void test_spi_task(void * pvParameter)
 
         for (int i = 0; i < NUM_LEDS; ++i)
         {
-            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 0] = LED_FRAME_BASE + g_brightness;
-            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 1] = g_blue;
-            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 2] = g_green;
-            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 3] = g_red;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 0] = LED_FRAME_BASE + leds[i].brightness;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 1] = leds[i].blue;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 2] = leds[i].green;
+            buffer[NUM_START_BYTES + i * BYTES_PER_LED + 3] = leds[i].red;
         }
         write_buffer(handle, buffer, NUM_BYTES);
 
@@ -120,6 +120,6 @@ void app_main()
 
     wifi_support_init();
 
-    xTaskCreate(&test_spi_task, "test_spi_task", 4096, NULL, 5, NULL);
+    xTaskCreate(&test_spi_task, "test_spi_task", 8192, NULL, 4, NULL);
 }
 
