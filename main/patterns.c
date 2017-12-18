@@ -135,6 +135,13 @@ void patterns_init(void)
     g_patterns_config.global.brightness = 16;
     g_patterns_config.pattern0.mode = 0;
     g_patterns_config.pattern0.cycle_speed = 10;
+
+    g_patterns_config.pattern2.pos[0] = 0;
+    g_patterns_config.pattern2.pos[1] = 51;
+    g_patterns_config.pattern2.pos[2] = 102;
+    g_patterns_config.pattern2.pos[3] = 153;
+    g_patterns_config.pattern2.pos[4] = 204;
+    g_patterns_config.pattern2.pos[5] = 255;
 }
 
 void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
