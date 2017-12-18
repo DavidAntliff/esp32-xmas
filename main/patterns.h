@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#define MAX_PATTERNS 1
+#define FLASHER_BUTTONS 6
 
 typedef struct
 {
@@ -16,12 +16,17 @@ typedef struct
 
 typedef struct
 {
-    uint8_t mode;   // 0 = RGB, 1 = Palette
+    uint8_t active_pattern;
     uint8_t brightness;
+    uint8_t palette;      // current palette index
+} global_config;
+
+typedef struct
+{
+    uint8_t mode;   // 0 = RGB, 1 = Palette
     uint8_t red;
     uint8_t green;
     uint8_t blue;
-    uint8_t palette;      // current palette index
     uint8_t palette_pos;  // current palette colour
     uint8_t cycle;
     uint8_t cycle_speed;
@@ -40,9 +45,17 @@ typedef struct
 
 typedef struct
 {
-    uint8_t active;
+    uint8_t split;
+    uint8_t push[FLASHER_BUTTONS];
+    uint8_t pos[FLASHER_BUTTONS];
+} pattern2_config;
+
+typedef struct
+{
+    global_config global;
     pattern0_config pattern0;
     pattern1_config pattern1;
+    pattern2_config pattern2;
 } patterns_config;
 
 extern patterns_config g_patterns_config;

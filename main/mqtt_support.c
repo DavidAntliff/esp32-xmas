@@ -74,8 +74,8 @@ static void mqtt_message_callback(const char * topic, uint8_t * payload, size_t 
     {
         int index = 0;
         sscanf(topic, "xmas/pattern/%d", &index);
-        g_patterns_config.active = index - 1;
-        ESP_LOGI(TAG, "pattern %d", g_patterns_config.active);
+        g_patterns_config.global.active_pattern = index - 1;
+        ESP_LOGI(TAG, "pattern %d", g_patterns_config.global.active_pattern);
     }
     else
     {
@@ -98,12 +98,13 @@ void mqtt_support_init(void)
     esp_mqtt_init(mqtt_status_callback, mqtt_message_callback, 256, 2000);
 
     g_trie = trie_create();
-    trie_insert(g_trie, "xmas/1/brightness",  &g_patterns_config.pattern0.brightness);
+    trie_insert(g_trie, "xmas/global/brightness",  &g_patterns_config.global.brightness);
+    trie_insert(g_trie, "xmas/global/palette",     &g_patterns_config.global.palette);
+
     trie_insert(g_trie, "xmas/1/mode",        &g_patterns_config.pattern0.mode);
     trie_insert(g_trie, "xmas/1/red",         &g_patterns_config.pattern0.red);
     trie_insert(g_trie, "xmas/1/green",       &g_patterns_config.pattern0.green);
     trie_insert(g_trie, "xmas/1/blue",        &g_patterns_config.pattern0.blue);
-    trie_insert(g_trie, "xmas/1/palette",     &g_patterns_config.pattern0.palette);
     trie_insert(g_trie, "xmas/1/palette_pos", &g_patterns_config.pattern0.palette_pos);
     trie_insert(g_trie, "xmas/1/cycle",       &g_patterns_config.pattern0.cycle);
     trie_insert(g_trie, "xmas/1/cycle_speed", &g_patterns_config.pattern0.cycle_speed);
@@ -115,6 +116,22 @@ void mqtt_support_init(void)
     trie_insert(g_trie, "xmas/2/speed",        &g_patterns_config.pattern1.speed);
     trie_insert(g_trie, "xmas/2/direction",    &g_patterns_config.pattern1.direction);
     trie_insert(g_trie, "xmas/2/bounce",       &g_patterns_config.pattern1.bounce);
+
+    // assume FLASHER_BUTTONS = 6
+    assert(FLASHER_BUTTONS == 6);
+    trie_insert(g_trie, "xmas/3/split",       &g_patterns_config.pattern2.split);
+    trie_insert(g_trie, "xmas/3/push1",       &g_patterns_config.pattern2.push[0]);
+    trie_insert(g_trie, "xmas/3/push2",       &g_patterns_config.pattern2.push[1]);
+    trie_insert(g_trie, "xmas/3/push3",       &g_patterns_config.pattern2.push[2]);
+    trie_insert(g_trie, "xmas/3/push4",       &g_patterns_config.pattern2.push[3]);
+    trie_insert(g_trie, "xmas/3/push5",       &g_patterns_config.pattern2.push[4]);
+    trie_insert(g_trie, "xmas/3/push6",       &g_patterns_config.pattern2.push[5]);
+    trie_insert(g_trie, "xmas/3/pos1",        &g_patterns_config.pattern2.pos[0]);
+    trie_insert(g_trie, "xmas/3/pos2",        &g_patterns_config.pattern2.pos[1]);
+    trie_insert(g_trie, "xmas/3/pos3",        &g_patterns_config.pattern2.pos[2]);
+    trie_insert(g_trie, "xmas/3/pos4",        &g_patterns_config.pattern2.pos[3]);
+    trie_insert(g_trie, "xmas/3/pos5",        &g_patterns_config.pattern2.pos[4]);
+    trie_insert(g_trie, "xmas/3/pos6",        &g_patterns_config.pattern2.pos[5]);
 
     ESP_LOGI(TAG, "trie: count %d, size %d bytes", trie_count(g_trie, ""), trie_size(g_trie));
 }
