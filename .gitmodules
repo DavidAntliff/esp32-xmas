@@ -1,6 +1,6 @@
-[submodule "components/espmqtt"]
-	path = components/espmqtt
-	url = https://github.com/DavidAntliff/espmqtt.git
 [submodule "components/esp-mqtt"]
 	path = components/esp-mqtt
 	url = https://github.com/256dpi/esp-mqtt.git
+[submodule "components/trie"]
+	path = components/trie
+	url = https://github.com/DavidAntliff/trie.git

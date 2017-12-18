@@ -17,14 +17,6 @@
 #define PIN_LED_DATA (GPIO_NUM_26)
 #define PIN_LED_CS (GPIO_NUM_13)
 
-bool g_mqtt_disconnected = false;
-
-uint8_t g_pattern = 0;
-uint8_t g_brightness = 0;
-uint8_t g_red = 0;
-uint8_t g_green = 0;
-uint8_t g_blue = 0;
-
 void write_buffer(spi_device_handle_t handle, uint8_t * data, uint32_t len)
 {
     spi_transaction_t trans_desc = {
@@ -40,7 +32,7 @@ void write_buffer(spi_device_handle_t handle, uint8_t * data, uint32_t len)
     ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
 }
 
-void test_spi_task(void * pvParameter)
+void spi_task(void * pvParameter)
 {
     spi_bus_config_t bus_config = {
         .miso_io_num = -1,
@@ -79,7 +71,7 @@ void test_spi_task(void * pvParameter)
     {
         uint8_t buffer[NUM_BYTES] = { 0 };
 
-        do_pattern(leds, NUM_LEDS, g_pattern, g_brightness, g_red, g_green, g_blue);
+        do_pattern(leds, NUM_LEDS, &g_patterns_config);
 
         for (int i = 0; i < NUM_LEDS; ++i)
         {
@@ -111,6 +103,6 @@ void app_main()
     mqtt_support_init();
     wifi_support_init();
 
-    xTaskCreate(&test_spi_task, "test_spi_task", 8192, NULL, 4, NULL);
+    xTaskCreate(&spi_task, "spi_task", 8192, NULL, 4, NULL);
 }
 
