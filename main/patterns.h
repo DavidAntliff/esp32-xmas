@@ -16,20 +16,38 @@ typedef struct
 
 typedef struct
 {
+    uint8_t mode;   // 0 = RGB, 1 = Palette
+    uint8_t brightness;
     uint8_t red;
     uint8_t green;
     uint8_t blue;
-    uint8_t brightness;
+    uint8_t palette;      // current palette index
+    uint8_t palette_pos;  // current palette colour
+    uint8_t cycle;
+    uint8_t cycle_speed;
 } pattern0_config;
+
+typedef struct
+{
+    uint8_t brightness;
+    uint8_t palette;
+    uint8_t palette_step;
+    uint8_t length;
+    uint8_t speed;
+    uint8_t direction;
+    uint8_t bounce;
+} pattern1_config;
 
 typedef struct
 {
     uint8_t active;
     pattern0_config pattern0;
+    pattern1_config pattern1;
 } patterns_config;
 
 extern patterns_config g_patterns_config;
 
+void patterns_init(void);
 void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * config);
 
 #endif // PATTERNS_H

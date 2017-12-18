@@ -100,6 +100,7 @@ void app_main()
     gpio_pad_select_gpio(BLUE_LED_GPIO);
     gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
 
+    patterns_init();
     mqtt_support_init();
     wifi_support_init();
 

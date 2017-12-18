@@ -1,7 +1,7 @@
 #ifndef CONSTANTS
 #define CONSTANTS
 
-#define NUM_LEDS        120                               // number of LEDs in strip
+#define NUM_LEDS        60//120                               // number of LEDs in strip
 #define NUM_START_BYTES 4                                 // number of zero bytes required at start of transaction
 #define BYTES_PER_LED   4                                 // number of bytes per LED (brightness, blue, green, red)
 #define NUM_ZEROS       (((NUM_LEDS + 1) / 2 + 7) / 8)    // final zero bytes required to clock through all data
