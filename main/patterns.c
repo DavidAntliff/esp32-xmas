@@ -35,9 +35,12 @@ static void do_rgb(led_state * leds, uint32_t num_leds, const pattern0_config * 
 
         if (cycling)
         {
-            if (config->cycle_speed == 0 || count % config->cycle_speed == 0)
+            int palette_step = config->cycle_speed < 10 ? 10 - config->cycle_speed : 1;
+            int count_period = config->cycle_speed / 10;
+
+            if (count_period == 0 || count % count_period == 0)
             {
-                cycle_pos += cycle_direction;
+                cycle_pos += cycle_direction * palette_step;
             }
             if (cycle_pos >= PALETTE_SIZE)
             {
@@ -102,8 +105,10 @@ void patterns_init(void)
 {
     ESP_LOGI(TAG, "%d palettes available", NUM_PALETTES);
 
+    // defaults
     g_patterns_config.pattern0.brightness = 16;
     g_patterns_config.pattern0.mode = 0;
+    g_patterns_config.pattern0.cycle_speed = 10;
 }
 
 void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * config)
