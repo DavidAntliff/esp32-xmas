@@ -175,15 +175,30 @@ static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config
     static uint32_t count = 0;
     static uint32_t num_locations = 0;
 
-    // keep copies
+    // keep copies to detech changes
+    static uint8_t brightness = 0;
+    static uint8_t palette = 0;
     static uint8_t number = 0;
     static uint8_t length = 0;
     static uint8_t gap = 0;
+    static uint8_t palette_step = 0;
 
     static led_state * buffer = 0;
     static uint32_t buffer_size = 0;
 
     bool reset = false;
+
+    if (brightness != patterns_config->global.brightness)
+    {
+        brightness = patterns_config->global.brightness;
+        reset = true;
+    }
+
+    if (palette != patterns_config->global.palette)
+    {
+        palette = patterns_config->global.palette;
+        reset = true;
+    }
 
     if (number != config->number)
     {
@@ -203,6 +218,12 @@ static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config
         reset = true;
     }
 
+    if (palette_step != config->palette_step)
+    {
+        palette_step = config->palette_step;
+        reset = true;
+    }
+
     if (reset)
     {
         // render the chasers into a side buffer
@@ -217,10 +238,11 @@ static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config
 
         for (int i = 0; i < number; ++i)
         {
+            current_palette_pos = i * palette_step;
             for (int j = 0; j < length; ++j)
             {
                 uint32_t pos = i * (length + gap) + j;
-                buffer[pos].brightness = patterns_config->global.brightness;
+                buffer[pos].brightness = brightness;
                 buffer[pos].red = current_palette[current_palette_pos].r;
                 buffer[pos].green = current_palette[current_palette_pos].g;
                 buffer[pos].blue = current_palette[current_palette_pos].b;
@@ -234,7 +256,15 @@ static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config
 
     for (uint32_t i = 0; i < num_leds; ++i)
     {
-        leds[i] = buffer[(i + pos) % num_locations];
+        uint32_t index = (i + pos) % num_locations;
+        if (config->direction)
+        {
+            leds[num_leds - i - 1] = buffer[index];
+        }
+        else
+        {
+            leds[i] = buffer[index];
+        }
     }
 }
 
@@ -262,7 +292,9 @@ void patterns_init(void)
     g_patterns_config.pattern3.number = 8;
     g_patterns_config.pattern3.length = 8;
     g_patterns_config.pattern3.gap = 8;
+    g_patterns_config.pattern3.palette_step = 32;
     g_patterns_config.pattern3.speed = 4;
+    g_patterns_config.pattern3.direction = 0;
 }
 
 void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
