@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "esp_log.h"
 #include "patterns.h"
 #include "palettes.h"
@@ -135,22 +138,24 @@ static void do_tracer(led_state * leds, uint32_t num_leds, const patterns_config
 
 static void do_flasher(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
 {
+    const pattern2_config * config = &patterns_config->pattern2;
+
     const rgba * current_palette = get_palette(patterns_config->global.palette);
     rgba colour[FLASHER_BUTTONS] = { 0 };
     rgba * col = &colour[0];
 
     for (int i = 0; i < FLASHER_BUTTONS; ++i)
     {
-        if (patterns_config->pattern2.push[i])
+        if (config->push[i])
         {
-            colour[i] = current_palette[patterns_config->pattern2.pos[i]];
+            colour[i] = current_palette[config->pos[i]];
             col = &colour[i];  // last one set
         }
     }
 
     for (uint32_t i = 0; i < num_leds; ++i)
     {
-        if (patterns_config->pattern2.split)
+        if (config->split)
         {
             col = &colour[i % FLASHER_BUTTONS];
         }
@@ -158,6 +163,78 @@ static void do_flasher(led_state * leds, uint32_t num_leds, const patterns_confi
         leds[i].red = col->r;
         leds[i].green = col->g;
         leds[i].blue = col->b;
+    }
+}
+
+static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
+{
+    const pattern3_config * config = &patterns_config->pattern3;
+
+    const rgba * current_palette = get_palette(patterns_config->global.palette);
+    static unsigned int current_palette_pos = 0;
+    static uint32_t count = 0;
+    static uint32_t num_locations = 0;
+
+    // keep copies
+    static uint8_t number = 0;
+    static uint8_t length = 0;
+    static uint8_t gap = 0;
+
+    static led_state * buffer = 0;
+    static uint32_t buffer_size = 0;
+
+    bool reset = false;
+
+    if (number != config->number)
+    {
+        number = config->number;
+        reset = true;
+    }
+
+    if (length != config->length)
+    {
+        length = config->length;
+        reset = true;
+    }
+
+    if (gap != config->gap)
+    {
+        gap = config->gap;
+        reset = true;
+    }
+
+    if (reset)
+    {
+        // render the chasers into a side buffer
+        num_locations = number * (length + gap);
+        if (num_locations < num_leds)
+            num_locations = num_leds;
+        buffer_size = sizeof(led_state) * num_locations;
+
+        free(buffer);
+        buffer = malloc(buffer_size);
+        memset(buffer, 0, buffer_size);
+
+        for (int i = 0; i < number; ++i)
+        {
+            for (int j = 0; j < length; ++j)
+            {
+                uint32_t pos = i * (length + gap) + j;
+                buffer[pos].brightness = patterns_config->global.brightness;
+                buffer[pos].red = current_palette[current_palette_pos].r;
+                buffer[pos].green = current_palette[current_palette_pos].g;
+                buffer[pos].blue = current_palette[current_palette_pos].b;
+            }
+        }
+    }
+
+    // slide the viewport over the unchanging array of chasers
+    count = (count + 1) % (num_locations * config->speed);
+    uint32_t pos = (count / config->speed);
+
+    for (uint32_t i = 0; i < num_leds; ++i)
+    {
+        leds[i] = buffer[(i + pos) % num_locations];
     }
 }
 
@@ -181,6 +258,11 @@ void patterns_init(void)
     g_patterns_config.pattern2.pos[3] = 153;
     g_patterns_config.pattern2.pos[4] = 204;
     g_patterns_config.pattern2.pos[5] = 255;
+
+    g_patterns_config.pattern3.number = 8;
+    g_patterns_config.pattern3.length = 8;
+    g_patterns_config.pattern3.gap = 8;
+    g_patterns_config.pattern3.speed = 4;
 }
 
 void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
@@ -195,6 +277,9 @@ void do_pattern(led_state * leds, uint32_t num_leds, const patterns_config * pat
             break;
         case 2:
             do_flasher(leds, num_leds, patterns_config);
+            break;
+        case 3:
+            do_chaser(leds, num_leds, patterns_config);
             break;
         default:
             ESP_LOGE(TAG, "Unsupported pattern ID %d", patterns_config->global.active_pattern);

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #define FLASHER_BUTTONS 6
+#define MAX_CHASERS 1000
 
 typedef struct
 {
@@ -51,10 +52,21 @@ typedef struct
 
 typedef struct
 {
+    uint8_t number;
+    uint8_t length;
+    uint8_t gap;
+    uint8_t palette_step;
+    uint8_t speed;
+    uint8_t direction;
+} pattern3_config;
+
+typedef struct
+{
     global_config global;
     pattern0_config pattern0;
     pattern1_config pattern1;
     pattern2_config pattern2;
+    pattern3_config pattern3;
 } patterns_config;
 
 extern patterns_config g_patterns_config;

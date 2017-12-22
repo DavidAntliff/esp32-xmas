@@ -132,5 +132,12 @@ void mqtt_support_init(void)
     trie_insert(g_trie, "xmas/3/pos5",        &g_patterns_config.pattern2.pos[4]);
     trie_insert(g_trie, "xmas/3/pos6",        &g_patterns_config.pattern2.pos[5]);
 
+    trie_insert(g_trie, "xmas/4/number",       &g_patterns_config.pattern3.number);
+    trie_insert(g_trie, "xmas/4/length",       &g_patterns_config.pattern3.length);
+    trie_insert(g_trie, "xmas/4/gap",          &g_patterns_config.pattern3.gap);
+    trie_insert(g_trie, "xmas/4/palette_step", &g_patterns_config.pattern3.palette_step);
+    trie_insert(g_trie, "xmas/4/speed",        &g_patterns_config.pattern3.speed);
+    trie_insert(g_trie, "xmas/4/direction",    &g_patterns_config.pattern3.direction);
+
     ESP_LOGI(TAG, "trie: count %d, size %d bytes", trie_count(g_trie, ""), trie_size(g_trie));
 }
