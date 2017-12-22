@@ -82,7 +82,7 @@ void spi_task(void * pvParameter)
         }
         write_buffer(handle, buffer, NUM_BYTES);
 
-        vTaskDelay(1);
+        vTaskDelay(2);
     }
 
 
@@ -104,6 +104,6 @@ void app_main()
     mqtt_support_init();
     wifi_support_init();
 
-    xTaskCreate(&spi_task, "spi_task", 8192, NULL, 4, NULL);
+    xTaskCreate(&spi_task, "spi_task", 8192, NULL, 6, NULL);
 }
 
