@@ -28,14 +28,13 @@ typedef struct
     uint8_t green;
     uint8_t blue;
     uint8_t palette_pos;  // current palette colour
+    uint8_t palette_show;
     uint8_t cycle;
     uint8_t cycle_speed;
 } pattern0_config;
 
 typedef struct
 {
-    uint8_t brightness;
-    uint8_t palette;
     uint8_t palette_step;
     uint8_t length;
     uint8_t speed;

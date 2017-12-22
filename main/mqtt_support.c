@@ -101,16 +101,15 @@ void mqtt_support_init(void)
     trie_insert(g_trie, "xmas/global/brightness",  &g_patterns_config.global.brightness);
     trie_insert(g_trie, "xmas/global/palette",     &g_patterns_config.global.palette);
 
-    trie_insert(g_trie, "xmas/1/mode",        &g_patterns_config.pattern0.mode);
-    trie_insert(g_trie, "xmas/1/red",         &g_patterns_config.pattern0.red);
-    trie_insert(g_trie, "xmas/1/green",       &g_patterns_config.pattern0.green);
-    trie_insert(g_trie, "xmas/1/blue",        &g_patterns_config.pattern0.blue);
-    trie_insert(g_trie, "xmas/1/palette_pos", &g_patterns_config.pattern0.palette_pos);
-    trie_insert(g_trie, "xmas/1/cycle",       &g_patterns_config.pattern0.cycle);
-    trie_insert(g_trie, "xmas/1/cycle_speed", &g_patterns_config.pattern0.cycle_speed);
+    trie_insert(g_trie, "xmas/1/mode",         &g_patterns_config.pattern0.mode);
+    trie_insert(g_trie, "xmas/1/red",          &g_patterns_config.pattern0.red);
+    trie_insert(g_trie, "xmas/1/green",        &g_patterns_config.pattern0.green);
+    trie_insert(g_trie, "xmas/1/blue",         &g_patterns_config.pattern0.blue);
+    trie_insert(g_trie, "xmas/1/palette_pos",  &g_patterns_config.pattern0.palette_pos);
+    trie_insert(g_trie, "xmas/1/palette_show", &g_patterns_config.pattern0.palette_show);
+    trie_insert(g_trie, "xmas/1/cycle",        &g_patterns_config.pattern0.cycle);
+    trie_insert(g_trie, "xmas/1/cycle_speed",  &g_patterns_config.pattern0.cycle_speed);
 
-    trie_insert(g_trie, "xmas/2/brightness",   &g_patterns_config.pattern1.brightness);
-    trie_insert(g_trie, "xmas/2/palette",      &g_patterns_config.pattern1.palette);
     trie_insert(g_trie, "xmas/2/palette_step", &g_patterns_config.pattern1.palette_step);
     trie_insert(g_trie, "xmas/2/length",       &g_patterns_config.pattern1.length);
     trie_insert(g_trie, "xmas/2/speed",        &g_patterns_config.pattern1.speed);

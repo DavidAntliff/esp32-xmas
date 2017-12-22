@@ -38,34 +38,49 @@ static void do_rgb(led_state * leds, uint32_t num_leds, const patterns_config * 
         bool cycling = config->cycle;
         unsigned int current_palette_pos = cycling ? cycle_pos : config->palette_pos;
 
-        if (cycling)
+        if (config->palette_show)
         {
-            int palette_step = config->cycle_speed < 10 ? 10 - config->cycle_speed : 1;
-            int count_period = config->cycle_speed / 10;
-
-            if (count_period == 0 || count % count_period == 0)
+            float palette_pitch = (float)PALETTE_SIZE / (float)num_leds;
+            for (uint32_t i = 0; i < num_leds; ++i)
             {
-                cycle_pos += cycle_direction * palette_step;
+                current_palette_pos = (unsigned int)(palette_pitch * i);
+                leds[i].brightness = patterns_config->global.brightness;
+                leds[i].red = current_palette[current_palette_pos].r;
+                leds[i].green = current_palette[current_palette_pos].g;
+                leds[i].blue = current_palette[current_palette_pos].b;
             }
-            if (cycle_pos >= PALETTE_SIZE)
-            {
-                cycle_pos = PALETTE_SIZE - 1;
-                cycle_direction = -1;
-            }
-            if (cycle_pos < 0)
-            {
-                cycle_pos = 0;
-                cycle_direction = 1;
-            }
-            current_palette_pos = cycle_pos;
         }
-
-        for (uint32_t i = 0; i < num_leds; ++i)
+        else
         {
-            leds[i].brightness = patterns_config->global.brightness;
-            leds[i].red = current_palette[current_palette_pos].r;
-            leds[i].green = current_palette[current_palette_pos].g;
-            leds[i].blue = current_palette[current_palette_pos].b;
+            if (cycling)
+            {
+                int palette_step = config->cycle_speed < 10 ? 10 - config->cycle_speed : 1;
+                int count_period = config->cycle_speed / 10;
+
+                if (count_period == 0 || count % count_period == 0)
+                {
+                    cycle_pos += cycle_direction * palette_step;
+                }
+                if (cycle_pos >= PALETTE_SIZE)
+                {
+                    cycle_pos = PALETTE_SIZE - 1;
+                    cycle_direction = -1;
+                }
+                if (cycle_pos < 0)
+                {
+                    cycle_pos = 0;
+                    cycle_direction = 1;
+                }
+                current_palette_pos = cycle_pos;
+            }
+
+            for (uint32_t i = 0; i < num_leds; ++i)
+            {
+                leds[i].brightness = patterns_config->global.brightness;
+                leds[i].red = current_palette[current_palette_pos].r;
+                leds[i].green = current_palette[current_palette_pos].g;
+                leds[i].blue = current_palette[current_palette_pos].b;
+            }
         }
     }
 
