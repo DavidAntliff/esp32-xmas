@@ -87,31 +87,50 @@ static void do_rgb(led_state * leds, uint32_t num_leds, const patterns_config * 
     ++count;
 }
 
-static void do_animated_strip(led_state * leds, uint32_t num_leds, uint8_t brightness, uint8_t red, uint8_t green, uint8_t blue)
-{
-    static uint32_t count = 0;
-    static uint32_t pos = 0;
-    leds[pos].brightness = brightness;
-    leds[pos].red = red;
-    leds[pos].green = green;
-    leds[pos].blue = blue;
-    pos = ((++count) / 4) % num_leds;
-}
-
 static void do_tracer(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
 {
     const pattern1_config * config = &patterns_config->pattern1;
     static uint32_t count = 0;
-    static uint32_t pos = 0;
-    leds[pos].brightness = patterns_config->global.brightness;
-
     const rgba * current_palette = get_palette(patterns_config->global.palette);
-    unsigned current_palette_pos = config->palette_step;
+    static unsigned int current_palette_pos = 0;
 
+//    // for safety:
+//    if (config->speed == 0)
+//    {
+//        config->speed = 1;
+//    }
+
+    count = (count + 1) % (num_leds * config->speed);
+    uint32_t pos = (count / config->speed);
+
+    static bool direction = false;
+    if (!config->bounce)
+    {
+        direction = config->direction;
+    }
+
+    if (count == 0)
+    {
+        ESP_LOGI(TAG, "current_palette_pos %d, config->palette_step %d", current_palette_pos, config->palette_step);
+        current_palette_pos = (current_palette_pos + config->palette_step) % PALETTE_SIZE;
+        ESP_LOGI(TAG, "new current_palette_pos %d", current_palette_pos);
+
+        if (config->bounce)
+        {
+            direction = !direction;
+            ESP_LOGI(TAG, "bounce: direction %d", direction);
+        }
+    }
+
+    if (direction)
+    {
+        pos = num_leds - pos - 1;
+    }
+
+    leds[pos].brightness = patterns_config->global.brightness;
     leds[pos].red = current_palette[current_palette_pos].r;
     leds[pos].green = current_palette[current_palette_pos].g;
     leds[pos].blue = current_palette[current_palette_pos].b;
-    pos = ((++count) / 4) % num_leds;
 }
 
 static void do_flasher(led_state * leds, uint32_t num_leds, const patterns_config * patterns_config)
@@ -148,8 +167,13 @@ void patterns_init(void)
 
     // defaults
     g_patterns_config.global.brightness = 16;
+    g_patterns_config.global.palette = 73;
     g_patterns_config.pattern0.mode = 0;
     g_patterns_config.pattern0.cycle_speed = 10;
+
+    g_patterns_config.pattern1.palette_step = 32;
+    g_patterns_config.pattern1.direction = 0;
+    g_patterns_config.pattern1.speed = 4;
 
     g_patterns_config.pattern2.pos[0] = 0;
     g_patterns_config.pattern2.pos[1] = 51;
