@@ -6,9 +6,8 @@ config MQTT_BROKER_IP_ADDRESS
         IP address or name of MQTT broker.
 
 config MQTT_BROKER_TCP_PORT
-    int "MQTT Broker TCP Port"
-    range 0 65535
-    default 1883
+    string "MQTT Broker TCP Port"
+    default "1883"
     help
         TCP Port to use to connect to MQTT broker.
 

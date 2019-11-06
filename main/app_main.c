@@ -20,8 +20,8 @@
 void write_buffer(spi_device_handle_t handle, uint8_t * data, uint32_t len)
 {
     spi_transaction_t trans_desc = {
-        .address = 0,
-        .command = 0,
+        .addr = 0,
+        .cmd = 0,
         .flags = 0,
         .length = len * 8,  // bits
         .rxlength = 0,
@@ -97,6 +97,7 @@ void spi_task(void * pvParameter)
 
 void app_main()
 {
+    esp_log_level_set("*", ESP_LOG_INFO);
     gpio_pad_select_gpio(BLUE_LED_GPIO);
     gpio_set_direction(BLUE_LED_GPIO, GPIO_MODE_OUTPUT);
 

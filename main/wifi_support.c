@@ -29,6 +29,7 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
+#include "nvs_flash.h"
 
 #include "wifi_support.h"
 #include "esp_mqtt.h"
@@ -85,5 +86,6 @@ static void wifi_conn_init(void)
 
 void wifi_support_init(void)
 {
+    nvs_flash_init();
     wifi_conn_init();
 }

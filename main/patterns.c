@@ -97,12 +97,7 @@ static void do_tracer(led_state * leds, uint32_t num_leds, const patterns_config
     const rgba * current_palette = get_palette(patterns_config->global.palette);
     static unsigned int current_palette_pos = 0;
 
-//    // for safety:
-//    if (config->speed == 0)
-//    {
-//        config->speed = 1;
-//    }
-
+    uint8_t speed = config->speed > 0 ? config->speed : 1;
     count = (count + 1) % (num_leds * config->speed);
     uint32_t pos = (count / config->speed);
 
@@ -251,8 +246,9 @@ static void do_chaser(led_state * leds, uint32_t num_leds, const patterns_config
     }
 
     // slide the viewport over the unchanging array of chasers
-    count = (count + 1) % (num_locations * config->speed);
-    uint32_t pos = (count / config->speed);
+    uint8_t speed = config->speed > 0 ? config->speed : 1;
+    count = (count + 1) % (num_locations * speed);
+    uint32_t pos = (count / speed);
 
     for (uint32_t i = 0; i < num_leds; ++i)
     {
